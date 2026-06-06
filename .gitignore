@@ -1,0 +1,19 @@
+# 客户原始数据（绝不入库）
+data/
+*.docx
+原始凭证/
+
+# 运行产物
+output/
+*.xlsx
+!**/科目表模板.xlsx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 临时
+tmp*/
+.DS_Store
