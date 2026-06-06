@@ -21,7 +21,7 @@ from src.reconcile import classify_channels, reconcile_wechat, reconcile_takeawa
 from src.llm import analyze_anomalies, chat_with_context, summarize_rules
 from src import report
 
-st.set_page_config(page_title="紫燕智能制单 POC", layout="wide")
+st.set_page_config(page_title="紫燕智能制单 POC", layout="wide", initial_sidebar_state="expanded")
 
 # ============================ 视觉系统（McKinsey 风） ============================
 st.markdown("""
@@ -144,6 +144,16 @@ def _journal():
 # ============================ 页面 ============================
 banner()
 
+# 侧边栏静态部分（始终显示，不被上传拦截影响）
+with st.sidebar:
+    st.markdown('### <i class="fa-solid fa-sliders" style="color:#2251FF"></i> 制单参数', unsafe_allow_html=True)
+    st.caption("上传当月结算报表后，下方出现门店与会计月份选择。")
+    st.divider()
+    st.markdown("##### 控制原则")
+    for _p in ["金额 100% 来自原始 Excel", "AI 不生成金额 / 不造科目",
+               "借贷平衡由程序校验", "异常 / 大额强制人工复核", "全流程留痕可追溯"]:
+        st.markdown(f"<span style='font-size:12.5px;color:#5B6B7B'>· {_p}</span>", unsafe_allow_html=True)
+
 # ---------- 01 数据上传与批次登记 ----------
 sec("01", "数据上传与批次登记", "财务上传当月原始数据，系统生成批次号确保可追溯")
 store_code = config.STORE_CODE
@@ -190,14 +200,8 @@ summary = monthly_summary(df, store_code)
 months = summary["年月"].tolist()
 
 with st.sidebar:
-    st.markdown('### <i class="fa-solid fa-sliders" style="color:#2251FF"></i> 制单参数', unsafe_allow_html=True)
     st.metric("目标门店", store_name)
     ym = st.selectbox("会计月份", months, index=0)
-    st.divider()
-    st.markdown("##### 控制原则")
-    for p in ["金额 100% 来自原始 Excel", "AI 不生成金额 / 不造科目",
-              "借贷平衡由程序校验", "异常 / 大额强制人工复核", "全流程留痕可追溯"]:
-        st.markdown(f"<span style='font-size:12.5px;color:#5B6B7B'>· {p}</span>", unsafe_allow_html=True)
 
 stepper(8)
 row = summary[summary["年月"] == ym].iloc[0].to_dict()
