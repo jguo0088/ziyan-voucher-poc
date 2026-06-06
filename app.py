@@ -141,6 +141,14 @@ def _journal():
     return pd.read_excel(config.F_JOURNAL, dtype=str)
 
 
+def get_journal():
+    """优先用上传的序时账（session），否则读本地（云端无则空表）。"""
+    jdf = st.session_state.get("journal_df")
+    if jdf is not None:
+        return jdf
+    return _journal()
+
+
 # ============================ 页面 ============================
 banner()
 
@@ -163,17 +171,31 @@ with st.container(border=True):
               if config.HAS_LOCAL_DATA else ["上传新数据"])
     mode = st.radio("数据来源", _modes, horizontal=True, label_visibility="collapsed")
     uploaded_settlement = None
+    uploaded_journal = None
     files = []
     if mode == "上传新数据":
-        up = st.file_uploader("上传结算报表 / 平台对账单 / 银行流水（可多选）",
+        up = st.file_uploader("上传结算报表 / 序时账 / 平台对账单（可多选）",
                               accept_multiple_files=True, type=["xlsx", "csv", "zip"])
         if up:
             files = [f.name for f in up]
+            # 按文件名分类：含"序时"→序时账；含"结算"→结算报表
             for f in up:
-                if "结算" in f.name or f.name.lower().endswith(".xlsx"):
+                if "序时" in f.name:
+                    uploaded_journal = f
+                elif "结算" in f.name:
                     uploaded_settlement = f
-                    break
-        st.caption("已识别『结算报表』用于归集与制单；序时账 / 平台流水未上传时，规则学习 / 对账 / 对照基于内置样例。")
+            # 兜底：未识别到结算报表，则取第一个非序时账的 xlsx
+            if uploaded_settlement is None:
+                for f in up:
+                    if f.name.lower().endswith(".xlsx") and "序时" not in f.name:
+                        uploaded_settlement = f
+                        break
+            # 上传的序时账读入 session（供规则学习 / 对照），按文件名去重避免重复读
+            if uploaded_journal is not None and st.session_state.get("journal_name") != uploaded_journal.name:
+                with st.spinner("读取上传的序时账…"):
+                    st.session_state.journal_df = pd.read_excel(uploaded_journal, dtype=str)
+                    st.session_state.journal_name = uploaded_journal.name
+        st.caption("已识别『结算报表』用于归集制单；上传『序时账』后可用于规则学习 / 凭证对照。")
     if "batch_id" not in st.session_state:
         st.session_state.batch_id = "ZY" + datetime.now().strftime("%Y%m%d%H%M%S")
     src_files = files or ["5.01紫燕直营店结算报表.xlsx", "紫燕食品-序时账.xlsx"]
@@ -248,7 +270,7 @@ with st.container(border=True):
 sec("04", "历史序时账 · 规则学习", "Python 统计科目组合 + DeepSeek 语义归纳记账逻辑，供财务确认")
 with st.container(border=True):
     if st.button("从历史序时账学习记账规则"):
-        jdf_learn = _journal()
+        jdf_learn = get_journal()
         if jdf_learn.empty:
             st.warning("当前环境无历史序时账数据（线上演示需随结算报表一起上传序时账）。规则学习暂不可用。")
         else:
@@ -366,7 +388,7 @@ with st.container(border=True):
 # ---------- 07 对照 + 输出 ----------
 sec("07", "对照真实凭证 · 生成输出", "与人工真实凭证逐科目对照 · 生成三份留痕文件")
 with st.container(border=True):
-    jdf = _journal()
+    jdf = get_journal()
     vno = None
     if not jdf.empty:
         period = str(int(ym.split("-")[1]))
