@@ -35,8 +35,8 @@ st.markdown("""
 }
 html, body, [class*="css"]{ font-family:'Inter','Segoe UI','Microsoft YaHei',sans-serif; }
 .stApp{ background:var(--bg); }
-#MainMenu, [data-testid="stToolbar"], [data-testid="stDecoration"], footer{ display:none !important; }
-header[data-testid="stHeader"]{ background:transparent !important; box-shadow:none !important; }
+footer{ display:none !important; }
+[data-testid="stDecoration"]{ display:none !important; }
 .block-container{ padding-top:1.2rem; padding-bottom:3rem; max-width:1180px; }
 
 /* 顶部品牌 banner */
