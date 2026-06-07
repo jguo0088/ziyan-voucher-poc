@@ -111,6 +111,14 @@ button[data-baseweb="tab"][aria-selected="true"]{ background:var(--navy) !import
   border-color:var(--navy) !important; box-shadow:0 2px 6px rgba(11,31,51,.2); }
 button[data-baseweb="tab"][aria-selected="true"] *{ color:#fff !important; }
 div[data-baseweb="tab-highlight"], div[data-baseweb="tab-border"]{ display:none !important; }
+/* 嵌套子 tab（制单内）：轻量下划线风，与主 tab 区分层级 */
+[data-baseweb="tab-panel"] div[data-baseweb="tab-list"]{ background:transparent; border:none; padding:0 0 2px; margin-bottom:6px; }
+[data-baseweb="tab-panel"] button[data-baseweb="tab"]{ background:transparent !important; border:none !important;
+  border-bottom:2px solid transparent !important; border-radius:0 !important; padding:4px 12px !important; box-shadow:none !important; }
+[data-baseweb="tab-panel"] button[data-baseweb="tab"]:hover{ background:transparent !important; color:var(--blue); }
+[data-baseweb="tab-panel"] button[data-baseweb="tab"][aria-selected="true"]{ background:transparent !important;
+  border-bottom:2px solid var(--blue) !important; box-shadow:none !important; }
+[data-baseweb="tab-panel"] button[data-baseweb="tab"][aria-selected="true"] *{ color:var(--blue) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -240,7 +248,6 @@ with st.sidebar:
     st.metric("目标门店", store_name)
     ym = st.selectbox("会计月份", months, index=0)
 
-stepper(8)
 row = summary[summary["年月"] == ym].iloc[0].to_dict()
 
 tab_g, tab_r, tab_l, tab_v, tab_a, tab_o, tab_c = st.tabs(
