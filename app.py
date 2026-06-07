@@ -180,10 +180,19 @@ with st.sidebar:
     st.markdown('### <i class="fa-solid fa-sliders" style="color:#2251FF"></i> 制单参数', unsafe_allow_html=True)
     st.caption("上传当月结算报表后，下方出现门店与会计月份选择。")
     st.divider()
+    _model = st.radio("AI 模型", ["DeepSeek-V3", "通义千问 Qwen-Plus"],
+                      help="切换大模型，影响规则归纳 / 异常归因 / 对话")
+    st.divider()
     st.markdown("##### 控制原则")
     for _p in ["金额 100% 来自原始 Excel", "AI 不生成金额 / 不造科目",
                "借贷平衡由程序校验", "异常 / 大额强制人工复核", "全流程留痕可追溯"]:
         st.markdown(f"<span style='font-size:12.5px;color:#5B6B7B'>· {_p}</span>", unsafe_allow_html=True)
+
+# 按所选模型确定 LLM 调用参数（影响 04 规则归纳 / 06 异常归因 / 08 对话）
+if "Qwen" in _model:
+    LLM_KEY, LLM_BASE, LLM_MODEL = config.QWEN_API_KEY, config.QWEN_BASE_URL, config.QWEN_MODEL
+else:
+    LLM_KEY, LLM_BASE, LLM_MODEL = config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, config.DEEPSEEK_MODEL
 
 # ---------- 01 数据上传与批次登记 ----------
 sec("01", "数据上传与批次登记", "财务上传当月原始数据，系统生成批次号确保可追溯")
@@ -307,7 +316,7 @@ with tab_l:
             with st.spinner("DeepSeek 归纳记账逻辑中…"):
                 try:
                     st.session_state.rule_summary = summarize_rules(
-                        stats_text, config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, config.DEEPSEEK_MODEL)
+                        stats_text, LLM_KEY, LLM_BASE, LLM_MODEL)
                 except Exception as e:
                     st.session_state.rule_summary = f"（归纳失败：{e}）"
     if st.session_state.get("learned"):
@@ -398,8 +407,7 @@ with tab_a:
     st.dataframe(pd.DataFrame(anomalies), use_container_width=True, hide_index=True)
     if st.button("调用 DeepSeek 分析异常项"):
         with st.spinner("AI 分析中…"):
-            parsed, _raw = analyze_anomalies(anomalies, config.DEEPSEEK_API_KEY,
-                                             config.DEEPSEEK_BASE_URL, config.DEEPSEEK_MODEL)
+            parsed, _raw = analyze_anomalies(anomalies, LLM_KEY, LLM_BASE, LLM_MODEL)
         st.session_state.llm_result = parsed
     if st.session_state.get("llm_result"):
         st.success("AI 归因完成（仅判断与建议，金额 / 科目由程序确定）：")
@@ -452,7 +460,7 @@ with tab_o:
     if st.session_state.get("llm_result"):
         audit_logs.append({
             "调用场景": "异常归因（步骤6-7）", "输入摘要": f"{len(st.session_state.llm_result)} 个异常项",
-            "AI输出": "性质判断+归因+复核建议（无金额、无科目）", "模型版本": config.DEEPSEEK_MODEL,
+            "AI输出": "性质判断+归因+复核建议（无金额、无科目）", "模型版本": LLM_MODEL,
             "提示词版本": "anomaly-v1", "规则版本": "-",
             "调用时间": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M:%S"),
         })
@@ -524,7 +532,7 @@ with tab_c:
         with st.spinner("AI 思考中…"):
             try:
                 ans = chat_with_context(user_q, context_text, st.session_state.chat_history[:-1],
-                                        config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, config.DEEPSEEK_MODEL)
+                                        LLM_KEY, LLM_BASE, LLM_MODEL)
             except Exception as e:
                 ans = f"（调用失败：{e}）"
         st.session_state.chat_history.append({"role": "assistant", "content": ans})
