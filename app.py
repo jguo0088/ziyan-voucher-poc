@@ -229,9 +229,11 @@ with st.sidebar:
 stepper(8)
 row = summary[summary["年月"] == ym].iloc[0].to_dict()
 
+tab_g, tab_r, tab_l, tab_v, tab_a, tab_o, tab_c = st.tabs(
+    ["清洗归集", "渠道对账", "规则学习", "自动制单", "AI异常归因", "对照与输出", "AI助手"])
+
 # ---------- 02 清洗与月度归集 ----------
-sec("02", "数据清洗与月度归集", f"数据源：5.01结算报表 · 会计月份 {ym}")
-with st.container(border=True):
+with tab_g:
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("系统销售金额", f"{row['系统销售金额']:,.0f}")
     c2.metric("营业额", f"{row['营业额']:,.0f}")
@@ -241,8 +243,7 @@ with st.container(border=True):
         st.dataframe(summary.set_index("年月").T, use_container_width=True)
 
 # ---------- 03 渠道初判与应收实收对账 ----------
-sec("03", "渠道初判与应收↔实收对账", "各渠道拟入科目初判 · 结算报表应收 vs 平台实收 差异核对")
-with st.container(border=True):
+with tab_r:
     st.markdown("**渠道初判 —— 拟入科目 / 处理方式 / 置信度**")
     st.dataframe(classify_channels(row), use_container_width=True, hide_index=True)
     st.markdown("**应收 ↔ 实收对账（多源交叉核对）**")
@@ -268,8 +269,7 @@ with st.container(border=True):
         st.info("未找到该月平台流水文件，对账跳过。")
 
 # ---------- 04 规则学习 ----------
-sec("04", "历史序时账 · 规则学习", "Python 统计科目组合 + DeepSeek 语义归纳记账逻辑，供财务确认")
-with st.container(border=True):
+with tab_l:
     if st.button("从历史序时账学习记账规则"):
         jdf_learn = get_journal()
         if jdf_learn.empty:
@@ -304,7 +304,6 @@ with st.container(border=True):
         st.info("点击按钮：Python 统计科目组合/摘要，DeepSeek 再语义归纳出记账逻辑。")
 
 # ---------- 05 自动制单 ----------
-sec("05", "自动生成会计分录草稿", "高置信规则确定性生成 · 多类凭证 · 完整程序校验")
 lines = gen_revenue_voucher(ym, row)
 disc_lines = gen_discount_voucher(ym, row)
 takeaway_lines = gen_takeaway_voucher(ym, row)
@@ -324,7 +323,7 @@ def _show_balance(ls):
         f"借合计 {b:,.2f} ｜ 贷合计 {c:,.2f} ｜ 借贷平衡：{'通过' if ok else '不平'}")
 
 
-with st.container(border=True):
+with tab_v:
     t1, t2, t3, t4 = st.tabs(["① 收入确认凭证", "② 折扣调整（草案）", "③ 外卖应收结转（暂估）", "④ 程序校验清单"])
     with t1:
         st.dataframe(_draft_view(lines), use_container_width=True, hide_index=True)
@@ -348,8 +347,7 @@ with st.container(border=True):
         st.caption("校验涵盖收入 / 折扣 / 外卖全部分录；未通过项转人工复核清单。")
 
 # ---------- 06 AI 异常归因 ----------
-sec("06", "AI 异常归因与复核建议", "规则无法确定的差异 / 缺明细 → DeepSeek 分析（不生成金额、不造科目）")
-with st.container(border=True):
+with tab_a:
     成本候选 = float(row.get("工厂配送金额", 0) or 0)
     储值额 = float(row.get("储值/会员", 0) or 0)
     anomalies = [{
@@ -387,8 +385,7 @@ with st.container(border=True):
         st.dataframe(pd.DataFrame(st.session_state.llm_result), use_container_width=True, hide_index=True)
 
 # ---------- 07 对照 + 输出 ----------
-sec("07", "对照真实凭证 · 生成输出", "与人工真实凭证逐科目对照 · 生成三份留痕文件")
-with st.container(border=True):
+with tab_o:
     jdf = get_journal()
     vno = None
     if not jdf.empty:
@@ -469,8 +466,7 @@ with st.container(border=True):
     st.caption("POC 阶段优先 Excel 导入；后续可对接金蝶 / 用友 / SAP 的 RPA 或 API。")
 
 # ---------- 08 对话式财务助手 ----------
-sec("08", "AI 财务助手 · 自由问答", "基于当前制单数据用自然语言提问 · 仅解释分析，不改金额科目")
-with st.container(border=True):
+with tab_c:
     _ctx = [f"门店：{store_name}，会计月份：{ym}",
             f"系统销售={row['系统销售金额']:.0f}，营业额={row['营业额']:.0f}，门店收款小计={row['门店收款小计']:.0f}"]
     _ctx.append("各渠道金额：" + "，".join(
