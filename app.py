@@ -180,7 +180,7 @@ with st.sidebar:
     st.markdown('### <i class="fa-solid fa-sliders" style="color:#2251FF"></i> 制单参数', unsafe_allow_html=True)
     st.caption("上传当月结算报表后，下方出现门店与会计月份选择。")
     st.divider()
-    _model = st.radio("AI 模型", ["DeepSeek-V4-Flash", "通义千问 Qwen3.7-Plus"],
+    _model = st.radio("AI 模型", ["DeepSeek-V4-Flash", "DeepSeek-V4-Pro", "通义千问 Qwen3.7-Plus"],
                       help="切换大模型，影响规则归纳 / 异常归因 / 对话")
     st.divider()
     st.markdown("##### 控制原则")
@@ -191,6 +191,8 @@ with st.sidebar:
 # 按所选模型确定 LLM 调用参数（影响 04 规则归纳 / 06 异常归因 / 08 对话）
 if "Qwen" in _model:
     LLM_KEY, LLM_BASE, LLM_MODEL = config.QWEN_API_KEY, config.QWEN_BASE_URL, config.QWEN_MODEL
+elif "Pro" in _model:
+    LLM_KEY, LLM_BASE, LLM_MODEL = config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, config.DEEPSEEK_PRO_MODEL
 else:
     LLM_KEY, LLM_BASE, LLM_MODEL = config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, config.DEEPSEEK_MODEL
 
