@@ -180,7 +180,7 @@ with st.sidebar:
     st.markdown('### <i class="fa-solid fa-sliders" style="color:#2251FF"></i> 制单参数', unsafe_allow_html=True)
     st.caption("上传当月结算报表后，下方出现门店与会计月份选择。")
     st.divider()
-    _model = st.radio("AI 模型", ["DeepSeek-V3", "通义千问 Qwen-Plus"],
+    _model = st.radio("AI 模型", ["DeepSeek-V3", "通义千问 Qwen3.7-Plus"],
                       help="切换大模型，影响规则归纳 / 异常归因 / 对话")
     st.divider()
     st.markdown("##### 控制原则")

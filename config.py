@@ -54,7 +54,7 @@ DEEPSEEK_MODEL = "deepseek-chat"
 # 通义千问 Qwen（OpenAI 兼容接口）
 QWEN_API_KEY = _get_secret("QWEN_API_KEY")
 QWEN_BASE_URL = _get_secret("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
-QWEN_MODEL = "qwen-plus"
+QWEN_MODEL = "qwen3.7-plus"
 
 # 本地是否存在真实数据（云端通常 False → 自动切到上传模式）
 HAS_LOCAL_DATA = os.path.exists(F_SETTLEMENT)
