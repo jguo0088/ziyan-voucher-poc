@@ -49,7 +49,7 @@ def _get_secret(key: str, default: str = "") -> str:
 
 DEEPSEEK_API_KEY = _get_secret("DEEPSEEK_API_KEY")
 DEEPSEEK_BASE_URL = _get_secret("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
-DEEPSEEK_MODEL = "deepseek-chat"
+DEEPSEEK_MODEL = "deepseek-v4-flash"
 
 # 通义千问 Qwen（OpenAI 兼容接口）
 QWEN_API_KEY = _get_secret("QWEN_API_KEY")
